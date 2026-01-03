@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .prose h3 { color: #1e40af; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; }
+    .prose ul { list-style-type: disc; padding-left: 1.5em; }
+    .prose strong { color: #1e293b; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+<div id="app" class="pb-12">
+  <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4 max-w-6xl flex justify-between items-center">
+      <h1 class="text-xl font-bold">Prof.404 🎓 開箱教授去哪兒？ <span class="text-sm font-normal opacity-80">PRO版</span></h1>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-6 max-w-6xl">
+    <div class="bg-white rounded-xl shadow p-4 mb-6">
+      <div class="flex gap-2">
+        <input v-model="searchQuery" @keyup.enter="startSearch" type="text" placeholder="輸入研究領域 (例如: LLM, 量子計算)..." 
+               class="flex-grow px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        <button @click="startSearch" :disabled="isLoading" 
+                class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-slate-300 flex items-center gap-2">
+          <span v-if="isLoading" class="animate-spin">⌛</span>
+          <span>{{ isLoading ? '搜尋中' : '搜尋' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex border-b mb-6">
+      <button @click="viewMode='search'" :class="['px-4 py-2 border-b-2 font-medium', viewMode==='search'?'border-blue-600 text-blue-600':'border-transparent text-slate-500']">
+        搜尋結果 ({{ searchResults.length }})
+      </button>
+      <button @click="viewMode='saved'" :class="['px-4 py-2 border-b-2 font-medium', viewMode==='saved'?'border-blue-600 text-blue-600':'border-transparent text-slate-500']">
+        追蹤清單 ({{ savedProfessors.length }})
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="md:col-span-1 space-y-3">
+        <div v-for="prof in displayList" :key="prof.name + prof.university"
+             @click="selectProfessor(prof)"
+             :class="['p-3 rounded-lg border cursor-pointer hover:shadow transition-all relative', 
+                      selectedProfessor?.name === prof.name ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white',
+                      prof.status === 'match' ? 'border-green-300 bg-green-50' : '',
+                      prof.status === 'mismatch' ? 'border-red-300 bg-red-50' : '']">
+          
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-bold flex items-center gap-1">{{ prof.name }} 
+                <span v-if="prof.status === 'match'">✅</span>
+                <span v-if="prof.status === 'mismatch'">❌</span>
+                <span v-if="prof.details" title="已分析" class="text-[10px]">📄</span>
+              </div>
+              <div class="text-xs text-slate-600">{{ prof.university }}</div>
+              <div class="text-[10px] text-slate-500">{{ prof.department }}</div>
+            </div>
+            <span v-if="prof.relevanceScore" class="text-[10px] font-bold px-1.5 py-0.5 bg-slate-200 rounded">
+              {{ prof.relevanceScore }}%
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-1 mt-1">
+            <span v-for="tag in prof.tags" class="text-[10px] bg-slate-100 text-slate-600 px-1.5 rounded border">#{{ tag }}</span>
+          </div>
+        </div>
+
+        <div v-if="viewMode === 'search' && searchResults.length > 0">
+           <button @click="loadMore" :disabled="isLoadingMore" 
+                   class="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded border border-blue-200 hover:bg-blue-100 disabled:opacity-50">
+             {{ isLoadingMore ? '載入中...' : '載入更多' }}
+           </button>
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <div v-if="selectedProfessor" class="bg-white rounded-xl shadow border p-6 sticky top-4">
+          <div class="flex justify-between items-start border-b pb-4 mb-4">
+            <div>
+              <h2 class="text-2xl font-bold">{{ selectedProfessor.name }}</h2>
+              <p class="text-slate-600">{{ selectedProfessor.university }} | {{ selectedProfessor.department }}</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 justify-end items-center">
+              <button @click="updateStatus('match')" :class="['px-3 py-1 rounded-full text-sm border font-medium transition-colors', selectedProfessor.status==='match'?'bg-green-600 text-white':'bg-white text-slate-600 hover:bg-green-50']">✅ 符合</button>
+              <button @click="updateStatus('mismatch')" :class="['px-3 py-1 rounded-full text-sm border font-medium transition-colors', selectedProfessor.status==='mismatch'?'bg-red-600 text-white':'bg-white text-slate-600 hover:bg-red-50']">❌ 不符</button>
+              <button @click="updateStatus('pending')" :class="['px-3 py-1 rounded-full text-sm border font-medium transition-colors', selectedProfessor.status==='pending'?'bg-amber-500 text-white':'bg-white text-slate-600 hover:bg-amber-50']">❓ 待觀察</button>
+              
+              <div class="w-px h-6 bg-slate-300 mx-1"></div>
+              
+              <button @click="removeProf" class="px-3 py-1 rounded-full text-sm border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 font-medium transition-colors" title="從追蹤清單中移除">
+                🗑️ 移除
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mb-6">
+            <input v-model="newTagInput" @keyup.enter="addTag" placeholder="新增標籤..." class="px-3 py-1 text-sm border rounded w-40">
+            <button @click="addTag" class="px-2 bg-slate-100 border rounded">+</button>
+            <div class="flex flex-wrap gap-1 items-center">
+              <span v-for="tag in selectedProfessor.tags" class="bg-slate-100 text-sm px-2 py-1 rounded flex items-center gap-1">
+                 #{{ tag }} <span @click="removeTag(tag)" class="cursor-pointer text-slate-400 hover:text-red-500">×</span>
+              </span>
+            </div>
+          </div>
+
+          <div v-if="isDetailLoading" class="flex flex-col items-center py-12">
+            <div class="animate-spin text-3xl mb-2">🔍</div>
+            <p class="text-slate-500">首次分析需時較長，正在調查論文與出路...</p>
+          </div>
+
+          <div v-else>
+            <div v-html="renderedDetail" class="prose prose-sm max-w-none mb-8 bg-slate-50 p-4 rounded-lg border"></div>
+
+            <div v-if="sources.length" class="mb-6 text-sm">
+              <h4 class="font-bold text-slate-700 mb-2">參考來源：</h4>
+              <div class="flex flex-wrap gap-2">
+                <a v-for="s in sources" :href="s.uri" target="_blank" class="text-blue-600 hover:underline bg-blue-50 px-2 py-1 rounded text-xs truncate max-w-[200px]">
+                  🔗 {{ s.title }}
+                </a>
+              </div>
+            </div>
+
+            <div class="border-t pt-4">
+              <h3 class="font-bold mb-2">💬 AI 助手</h3>
+              <div class="h-48 overflow-y-auto bg-slate-50 border rounded p-3 mb-2 space-y-2">
+                <div v-for="msg in chatHistory" :class="['p-2 rounded max-w-[85%] text-sm', msg.role==='user'?'bg-blue-100 ml-auto':'bg-white border']">
+                  {{ msg.content }}
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <input v-model="chatInput" @keyup.enter="sendChat" placeholder="針對此教授提問..." class="flex-grow px-3 py-2 border rounded">
+                <button @click="sendChat" :disabled="isChatting" class="px-4 bg-blue-600 text-white rounded">送出</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="h-full flex items-center justify-center text-slate-400 border-2 border-dashed rounded-xl p-12">
+          請從左側點擊一位教授查看詳情
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const { createApp, ref, computed, onMounted } = Vue;
+
+  createApp({
+    setup() {
+      const searchQuery = ref('');
+      const searchResults = ref([]);
+      const savedProfessors = ref([]);
+      const selectedProfessor = ref(null);
+      const viewMode = ref('search');
+      const isLoading = ref(false);
+      const isLoadingMore = ref(false);
+      const isDetailLoading = ref(false);
+      
+      const detailText = ref('');
+      const sources = ref([]);
+      const newTagInput = ref('');
+      const chatHistory = ref([]);
+      const chatInput = ref('');
+      const isChatting = ref(false);
+
+      const getKey = (p) => `${p.name}-${p.university}`;
+      
+      const mergeWithSaved = (list) => {
+        const savedMap = new Map(savedProfessors.value.map(p => [getKey(p), p]));
+        return list.map(p => {
+          const saved = savedMap.get(getKey(p));
+          if (saved) {
+            return { ...p, tags: saved.tags, status: saved.status, note: saved.note, details: saved.details };
+          }
+          return { ...p, tags: p.tags || [], status: p.status || null, details: p.details || '' };
+        });
+      };
+
+      const displayList = computed(() => {
+        if (viewMode.value === 'saved') return savedProfessors.value;
+        return mergeWithSaved(searchResults.value);
+      });
+
+      const renderedDetail = computed(() => marked.parse(detailText.value || ''));
+
+      const callGAS = (func, ...args) => {
+        return new Promise((resolve, reject) => {
+          const jsonArgs = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg);
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            [func](...jsonArgs);
+        });
+      };
+
+      const loadSaved = async () => {
+        try { savedProfessors.value = await callGAS('getSavedProfessors'); } catch(e) {}
+      };
+
+      const startSearch = async () => {
+        if (!searchQuery.value) return;
+        viewMode.value = 'search';
+        isLoading.value = true;
+        searchResults.value = [];
+        selectedProfessor.value = null;
+        try {
+          const res = await callGAS('searchProfessors', searchQuery.value, []);
+          searchResults.value = res;
+        } catch(e) { alert(e.message); } 
+        finally { isLoading.value = false; }
+      };
+
+      const loadMore = async () => {
+        isLoadingMore.value = true;
+        try {
+          const currentNames = searchResults.value.map(p => p.name);
+          const res = await callGAS('searchProfessors', searchQuery.value, currentNames);
+          const existingKeys = new Set(searchResults.value.map(getKey));
+          const newUnique = res.filter(p => !existingKeys.has(getKey(p)));
+          searchResults.value = [...searchResults.value, ...newUnique];
+        } catch(e) { alert(e.message); }
+        finally { isLoadingMore.value = false; }
+      };
+
+      const selectProfessor = async (prof) => {
+        if (selectedProfessor.value && getKey(selectedProfessor.value) === getKey(prof)) return;
+        const mergedProf = displayList.value.find(p => getKey(p) === getKey(prof)) || prof;
+        selectedProfessor.value = mergedProf;
+        chatHistory.value = [];
+        sources.value = [];
+
+        if (mergedProf.details && mergedProf.details.length > 5) {
+            detailText.value = mergedProf.details;
+            saveToDB(mergedProf); 
+        } else {
+            detailText.value = '';
+            isDetailLoading.value = true;
+            try {
+                const res = await callGAS('getProfessorDetails', mergedProf);
+                detailText.value = res.text;
+                sources.value = res.sources;
+                mergedProf.details = res.text;
+                saveToDB(mergedProf);
+            } catch(e) { 
+                detailText.value = "載入失敗: " + e.message; 
+            } finally { 
+                isDetailLoading.value = false; 
+            }
+        }
+      };
+
+      const updateStatus = (status) => {
+        if (!selectedProfessor.value) return;
+        selectedProfessor.value.status = selectedProfessor.value.status === status ? null : status;
+        saveToDB(selectedProfessor.value);
+      };
+
+      const addTag = () => {
+        if (!newTagInput.value || !selectedProfessor.value) return;
+        if (!selectedProfessor.value.tags) selectedProfessor.value.tags = [];
+        if (!selectedProfessor.value.tags.includes(newTagInput.value)) {
+          selectedProfessor.value.tags.push(newTagInput.value);
+          saveToDB(selectedProfessor.value);
+        }
+        newTagInput.value = '';
+      };
+      
+      const removeTag = (tag) => {
+        if (!selectedProfessor.value) return;
+        selectedProfessor.value.tags = selectedProfessor.value.tags.filter(t => t !== tag);
+        saveToDB(selectedProfessor.value);
+      };
+
+      const saveToDB = async (prof) => {
+        const updatedList = await callGAS('saveOrUpdateProfessor', prof);
+        savedProfessors.value = updatedList;
+      };
+
+      const sendChat = async () => {
+        if (!chatInput.value) return;
+        const msg = chatInput.value;
+        chatHistory.value.push({role: 'user', content: msg});
+        chatInput.value = '';
+        isChatting.value = true;
+        try {
+          const res = await callGAS('chatWithAI', chatHistory.value, msg, detailText.value);
+          chatHistory.value.push({role: 'model', content: res});
+        } catch(e) { chatHistory.value.push({role: 'model', content: "Error: " + e.message}); }
+        finally { isChatting.value = false; }
+      };
+
+      // 移除函式
+      const removeProf = async () => {
+        if (!selectedProfessor.value) return;
+        if (!confirm(`確定要取消追蹤並移除 "${selectedProfessor.value.name}" 教授嗎？\n(這將會刪除已儲存的分析報告)`)) return;
+
+        const targetProf = selectedProfessor.value;
+        const targetKey = getKey(targetProf);
+        try {
+          const updatedList = await callGAS('deleteProfessor', targetProf);
+          savedProfessors.value = updatedList;
+
+          if (viewMode.value === 'saved') {
+            selectedProfessor.value = null;
+          } else {
+            const foundInSearch = searchResults.value.find(p => getKey(p) === targetKey);
+            if (foundInSearch) {
+               foundInSearch.status = null;
+               foundInSearch.details = null; 
+               foundInSearch.tags = [];
+               selectedProfessor.value = { ...foundInSearch }; 
+            } else {
+               selectedProfessor.value = null;
+            }
+          }
+          alert('已移除追蹤。');
+        } catch (e) {
+          alert("移除失敗: " + e.message);
+        }
+      };
+
+      onMounted(() => loadSaved());
+
+      return {
+        searchQuery, searchResults, savedProfessors, selectedProfessor,
+        viewMode, isLoading, isLoadingMore, isDetailLoading,
+        displayList, renderedDetail, sources,
+        newTagInput, chatHistory, chatInput, isChatting,
+        startSearch, loadMore, selectProfessor, updateStatus, addTag, removeTag, sendChat,
+        removeProf
+      };
+    }
+  }).mount('#app');
+</script>
+
+</body>
+</html>
