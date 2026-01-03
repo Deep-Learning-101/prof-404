@@ -4,10 +4,13 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from services import GeminiService
+from huggingface_hub import HfApi, hf_hub_download
 
 # Load Env
 load_dotenv()
 SAVE_FILE = os.getenv("SAVE_FILE_NAME", "saved_professors.json")
+HF_TOKEN = os.getenv("HF_TOKEN")
+DATASET_REPO_ID = os.getenv("DATASET_REPO_ID")
 
 # Init Service
 try:
@@ -22,24 +25,60 @@ def get_key(p):
     return f"{p['name']}-{p['university']}"
 
 def load_data():
+    data = []
+    # 1. 嘗試從雲端下載
+    if HF_TOKEN and DATASET_REPO_ID:
+        try:
+            print(f"正在同步雲端資料: {DATASET_REPO_ID}...")
+            hf_hub_download(
+                repo_id=DATASET_REPO_ID,
+                filename=SAVE_FILE,
+                repo_type="dataset",
+                token=HF_TOKEN,
+                local_dir="." # 覆蓋本地檔案
+            )
+            print("雲端同步完成。")
+        except Exception as e:
+            print(f"雲端同步略過 (初次啟動或無權限): {e}")
+
+    # 2. 讀取檔案
     if os.path.exists(SAVE_FILE):
         try:
             with open(SAVE_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
         except:
-            return []
-    return []
+            data = []
+    return data
 
 def save_data(data):
+    # 1. 存本地
     try:
         with open(SAVE_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"Save Error: {e}")
+        return
+
+    # 2. 上傳雲端
+    if HF_TOKEN and DATASET_REPO_ID:
+        try:
+            api = HfApi(token=HF_TOKEN)
+            api.upload_file(
+                path_or_fileobj=SAVE_FILE,
+                path_in_repo=SAVE_FILE,
+                repo_id=DATASET_REPO_ID,
+                repo_type="dataset",
+                commit_message="Sync data from Space"
+            )
+        except Exception as e:
+            print(f"Upload Error: {e}")
 
 def format_df(source_list, saved_list):
     if not source_list:
         return pd.DataFrame(columns=["狀態", "姓名", "大學", "系所", "標籤"])
+    
+    if saved_list is None:
+        saved_list = []
     
     saved_map = {get_key(p): p for p in saved_list}
     
@@ -263,25 +302,43 @@ def toggle_view(mode, search_res, saved_data):
     else:
         return format_df(saved_data, saved_data), gr.update(visible=False)
 
+def init_on_load():
+    data = load_data()
+    return data, format_df(data, data)
+
 # --- UI Layout ---
 
-# 🌟 這裡修正了標題，加入 Prof.404
 with gr.Blocks(title="Prof.404 開箱教授去哪兒？", theme=gr.themes.Soft()) as demo:
     
-    # State
-    saved_state = gr.State(load_data())
+    saved_state = gr.State([])
     search_res_state = gr.State([])
     selected_prof_state = gr.State(None)
 
-    # 🌟 頁面大標題也一併修正
-    gr.Markdown("# Prof.404 🎓 開箱教授去哪兒？ (請自行 Fork 使用)")
+    # 🌟 這裡插入了您要求的徽章與文字，使用 HTML 置中
+    gr.Markdown("""
+    <div align="center">
+    
+    # 🎓 Prof.404 - 開箱教授去哪兒？    
+    **學術研究啟程的導航系統，拒絕當科研路上的無頭蒼蠅** | **API KEY RPD，建議自行 Fork**</span>    
+    👉 歡迎 Star [GitHub](https://github.com/Deep-Learning-101/prof-404) ⭐ 覺得不錯 👈
+
+    <h3>🧠 補腦專區：<a href="https://deep-learning-101.github.io/" target="_blank">Deep Learning 101</a></h3>
+    
+    | 🔥 技術傳送門 (Tech Stack) | 📚 必讀心法 (Must Read) |
+    | :--- | :--- |
+    | 🤖 [**大語言模型 (LLM)**](https://deep-learning-101.github.io/Large-Language-Model) | 🏹 [**策略篇：企業入門策略**](https://deep-learning-101.github.io/Blog/AIBeginner) |
+    | 📝 [**自然語言處理 (NLP)**](https://deep-learning-101.github.io/Natural-Language-Processing) | 📊 [**評測篇：臺灣 LLM 分析**](https://deep-learning-101.github.io/Blog/TW-LLM-Benchmark) |
+    | 👁️ [**電腦視覺 (CV)**](https://deep-learning-101.github.io//Computer-Vision) | 🛠️ [**實戰篇：打造高精準 RAG**](https://deep-learning-101.github.io/RAG) |
+    | 🎤 [**語音處理 (Speech)**](https://deep-learning-101.github.io/Speech-Processing) | 🕳️ [**避坑篇：AI Agent 開發陷阱**](https://deep-learning-101.github.io/agent) |
+    </div>
+    """)
     
     with gr.Row():
         search_input = gr.Textbox(label="搜尋研究領域", placeholder="例如: 大型語言模型, 後量子密碼遷移...", scale=4)
         search_btn = gr.Button("🔍 搜尋", variant="primary", scale=1)
     
     with gr.Row():
-        view_radio = gr.Radio(["搜尋結果", "追蹤清單"], label="顯示模式", value="搜尋結果")
+        view_radio = gr.Radio(["搜尋結果", "追蹤清單"], label="顯示模式", value="追蹤清單")
     
     with gr.Row():
         # Left: List
@@ -327,10 +384,14 @@ with gr.Blocks(title="Prof.404 開箱教授去哪兒？", theme=gr.themes.Soft()
 
     # --- Wiring ---
     
+    demo.load(init_on_load, inputs=None, outputs=[saved_state, prof_df])
+
     search_btn.click(
         search_professors, 
         inputs=[search_input, saved_state],
         outputs=[prof_df, search_res_state, load_more_btn]
+    ).then(
+        lambda: gr.update(value="搜尋結果"), outputs=[view_radio]
     )
     
     load_more_btn.click(

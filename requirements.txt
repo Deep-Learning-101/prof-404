@@ -2,3 +2,4 @@ gradio
 google-genai
 python-dotenv
 pandas
+huggingface_hub
