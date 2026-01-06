@@ -1,55 +1,64 @@
-# 🎓 Prof.404 - 開箱教授去哪兒？ (Professor Insight Scout)
+---
+license: mit
+title: Prof.404.Com 產學導航系統
+sdk: gradio
+emoji: 👀
+colorFrom: purple
+colorTo: pink
+pinned: true
+short_description: 'Status code 404: 🎓 Prof.404 - 教授去哪兒？ + 🏢 Com.404 - 公司去那兒？'
+sdk_version: 6.2.0
+---
+
+# Prof.404.Com 產學導航系統
+_🎓 Prof.404 - 教授去哪兒？ + 🏢 Com.404 - 公司去那兒？_
 
 <div align="center">
 
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/DeepLearning101/Prof.404)
-[![GitHub](https://img.shields.io/badge/GitHub-Repo-black)](https://github.com/Deep-Learning-101/prof-404)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/DeepLearning101/Prof.404.Com)
+[![GitHub](https://img.shields.io/badge/GitHub-Repo-black)](https://github.com/Deep-Learning-101/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Powered by](https://img.shields.io/badge/Powered%20by-Gemini%20Pro-4285F4?logo=google)](https://deepmind.google/technologies/gemini/)
+[![Powered by](https://img.shields.io/badge/Powered%20by-Gemini%202.0%20Flash-4285F4?logo=google)](https://deepmind.google/technologies/gemini/)
 
-👉 歡迎 Star ⭐ GitHub 👆 👆 HuggingFace  ⭐ 覺得不錯 👈
+👉 歡迎 Star [GitHub](https://github.com/Deep-Learning-101/) ⭐ 覺得不錯 👈
 
-**學術研究啟程的導航系統，拒絕當科研路上的無頭蒼蠅**
-**(全新升級：支援雲端同步！HuggingFace Space 重啟資料不遺失 🔄)**
+**🚀 Prof.404.Com 產學導航系統 (🎓 Prof.404 - 教授去哪兒？ + 🏢 Com.404 - 公司去那兒？)**  
+**學術研究啟程、產業導航、公司徵信、AI 諮詢的導航系統，拒絕當科研路/求職與合作上的無頭蒼蠅**  
+**API Rate limits 是 RPD 20，建議自行 Fork使用** | **產學雙棲、研究導航、商業徵信，你的全方位 AI 顧問**  
+**(支援雲端同步！Space 重啟資料不遺失 🔄)**  
 
-[立即體驗 (Hugging Face)](https://huggingface.co/spaces/DeepLearning101/Prof.404) | [Deep Learning 101](https://deep-learning-101.github.io/)
+<h3>🧠 補腦專區：<a href="https://deep-learning-101.github.io/" target="_blank">Deep Learning 101</a></h3>
+
+| 🔥 技術傳送門 (Tech Stack) | 📚 必讀心法 (Must Read) |
+| :--- | :--- |
+| 🤖 [**大語言模型 (LLM)**](https://deep-learning-101.github.io/Large-Language-Model) | 🏹 [**策略篇：企業入門策略**](https://deep-learning-101.github.io/Blog/AIBeginner) |
+| 📝 [**自然語言處理 (NLP)**](https://deep-learning-101.github.io/Natural-Language-Processing) | 📊 [**評測篇：臺灣 LLM 分析**](https://deep-learning-101.github.io/Blog/TW-LLM-Benchmark) |
+| 👁️ [**電腦視覺 (CV)**](https://deep-learning-101.github.io//Computer-Vision) | 🛠️ [**實戰篇：打造高精準 RAG**](https://deep-learning-101.github.io/RAG) |
+| 🎤 [**語音處理 (Speech)**](https://deep-learning-101.github.io/Speech-Processing) | 🕳️ [**避坑篇：AI Agent 開發陷阱**](https://deep-learning-101.github.io/agent) |
 
 </div>
 
 ---
 
-## 🤔 為什麼你需要這個酷東西？
+## 🤔 為什麼你需要這個？
 
-在這個 AI 論文比薩滿還要多的時代，要在茫茫學海中找到「對的人」談何容易？
-不管你是想做研究、找產學合作，還是單純想知道台灣誰在搞最新的算法，你是否常覺得自己像隻無頭蒼蠅，撞得一頭血卻找不到方向？
+在這個 AI 論文比薩滿還要多的時代 ...  
+想做研究、找產學合作，還是單純想知道台灣誰在搞最新的算法，你是否常覺得自己像隻無頭蒼蠅，撞得一頭血卻找不到方向？  
+傳統求職網只能搜公司名，卻不能告訴你「這個領域誰是老大」；傳統論壇只能爬文，卻不能幫你「總結 100 篇抱怨文的重點」。  
+要在茫茫學海中找到「對的人」談何容易？「想做 AI 但不知道台灣有哪些公司？」、「想去這家公司但怕是家族企業？」  
 
-**Prof.404** 是一個基於 Google Gemini 模型的 **學術雷達**。它不只是搜人，更是你的科研情報官：
+**Prof.404.Com** 是一個基於 Google Gemini 模型的 **學術/產業雷達與徵信 Agent**。它能幫你：  
 
-* 🚀 **科研人員/開發者**：想知道台灣誰在做最新的「後量子密碼」或「具身智能」？別再一篇篇翻系所網頁了，AI 直接幫你盤點戰力。
-* 🤝 **產業界/企業主**：想找教授做產學合作、技術顧問？這裡能幫你分析教授的實戰經驗與過往產學績效。
-* 🎓 **準研究生**：選指導教授就像選對象，適不適合很重要。這裡提供客觀的研究方向與畢業生出路分析，作為你的選組參考。
-
----
-
-## 🧠 補腦專區：Deep Learning 101
-
-在使用工具飛向宇宙之前，先把裝備穿好。這裡有我們整理的最新乾貨滿滿 AI 技術地圖與實戰心法：
-
-### 🔥 技術傳送門 (Tech Stack)
-* 🤖 **大語言模型 (LLM)**: [拆解 LLM 的黑盒子](https://deep-learning-101.github.io/Large-Language-Model)
-* 📝 **自然語言處理 (NLP)**: [讓機器聽懂人話](https://deep-learning-101.github.io/Natural-Language-Processing)
-* 👁️ **電腦視覺 (CV)**: [像素眼中的世界](https://deep-learning-101.github.io//Computer-Vision)
-* 🎤 **語音處理 (Speech)**: [聲音的 AI 魔法](https://deep-learning-101.github.io/Speech-Processing)
-
-### 📚 必讀心法 (Must Read)
-* **策略篇** 👉 [AI 新賽局：企業的入門策略指南](https://deep-learning-101.github.io/Blog/AIBeginner)
-* **評測篇** 👉 [臺灣 LLM 性能評測與在地化分析](https://deep-learning-101.github.io/Blog/TW-LLM-Benchmark)
-* **實戰篇** 👉 [從零到一：打造高精準度 RAG 系統](https://deep-learning-101.github.io/RAG)
-* **避坑篇** 👉 [避開 AI Agent 開發陷阱與解決方案](https://deep-learning-101.github.io/agent)
+* 🌐 **產業探索**：輸入「量子計算」或「綠能」，直接列出台灣相關領域的代表公司。  
+* 🕵️‍♂️ **深度調查**：自動搜尋統編、資本額、PTT/Dcard 評價、掃描勞資糾紛與判決書。  
+* 💬 **AI 顧問**：看完報告還有疑問？直接問：「這間公司適合新鮮人嗎？」、「薪資結構如何？」。  
+* 🚀 **科研人員/開發者**：想知道台灣誰在做最新的「後量子密碼」或「具身智能」？別再一篇篇翻系所網頁了，AI 直接幫你盤點戰力。  
+* 🤝 **產業界/企業主**：想找教授做產學合作、技術顧問？這裡能幫你分析教授的實戰經驗與過往產學績效。  
+* 🎓 **準研究生**：選指導教授就像選對象，適不適合很重要。這裡提供客觀的研究方向與畢業生出路分析，作為你的選組參考。  
 
 ---
 
-## 🚀 快速佈署：只需 3 分鐘，打造你的專屬雷達
+## 🚀 快速佈署 (Hugging Face Space)
 
 我們提供兩種方案，不管你是 Google Sheet 的信徒，還是 Python 的狂熱者，都能輕鬆上手。
 
@@ -73,7 +82,7 @@
 1.  **準備雲端資料庫** (若不需雲端存檔可跳過)：
     * 到 HF 建立一個新的 **Dataset** (建議設為 Private)，記下 ID (如 `YourName/prof-data`)。
 2.  **Fork 專案**：直接到我們的 Space 點擊右上角的 **Duplicate this Space**。
-    * 👉 [DeepLearning101/Prof.404](https://huggingface.co/spaces/DeepLearning101/Prof.404)
+    * 👉 [DeepLearning101/Prof.404](https://huggingface.co/spaces/DeepLearning101/Prof.404.Com)
 3.  **設定 Secret** (Settings -> Variables and secrets -> Secrets)：
     * `GEMINI_API_KEY`: **(必填)** Gemini API 金鑰。
     * `HF_TOKEN`: **(選填)** 你的 HF Access Token (需有 Write 權限)，用於同步資料。
@@ -83,9 +92,7 @@
 
 ---
 
-## 🛠️ 本地開發 (Local Development)
-
-如果你想在自己電腦上魔改這個專案，甚至實現「本地跑程式、雲端存資料」：
+## 🛠️ 本地開發
 
 ```bash
 # 1. Clone 專案
@@ -96,10 +103,10 @@ cd prof-404
 pip install -r requirements.txt
 
 # 3. 設定 .env
-# 建立 .env 檔案並填入 (HF_TOKEN 設了就能跟你的 Space 同步資料！)：
 # GEMINI_API_KEY=你的Key
-# HF_TOKEN=你的HF_Write_Token (選填，填了就能同步雲端！)
-# DATASET_REPO_ID=你的Dataset_ID (選填)
+# SAVE_FILE_NAME=saved_companies.json
+# HF_TOKEN=... (選填)
+# DATASET_REPO_ID=... (選填)
 
-# 4. 啟動 Gradio
+# 4. 啟動
 python app.py
