@@ -12,6 +12,7 @@ sdk_version: 6.2.0
 
 # Prof.404.Com 產學導航系統
 _🎓 Prof.404 - 教授去哪兒？ + 🏢 Com.404 - 公司去那兒？_
+>https://github.com/Deep-Learning-101/prof-404-com  
 
 <div align="center">
 
